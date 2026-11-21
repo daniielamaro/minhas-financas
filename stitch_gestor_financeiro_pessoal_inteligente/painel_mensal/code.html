@@ -1,0 +1,461 @@
+<!DOCTYPE html><html lang="pt-BR"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Mensal — MinhasFinancas</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">/** @type {import('tailwindcss').Config} */
+globalThis.tailwind = globalThis.tailwind || {};
+globalThis.tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        'warning': '#92400E',
+        'on-warning': '#FFFFFF',
+        'warning-container': '#FEF3C7',
+        'on-warning-container': '#78350F',
+        'light-primary': '#005444',
+        'light-on-primary': '#FFFFFF',
+        'light-primary-container': '#0D6E5B',
+        'light-on-primary-container': '#9AEDD5',
+        'light-secondary': '#47645B',
+        'light-on-secondary': '#FFFFFF',
+        'light-secondary-container': '#C9EADE',
+        'light-on-secondary-container': '#18362E',
+        'light-tertiary': '#773629',
+        'light-on-tertiary': '#FFFFFF',
+        'light-tertiary-container': '#944D3E',
+        'light-on-tertiary-container': '#FFD3CA',
+        'light-error': '#BA1A1A',
+        'light-on-error': '#FFFFFF',
+        'light-error-container': '#FFDAD6',
+        'light-on-error-container': '#93000A',
+        'light-background': '#F7FAF7',
+        'light-on-background': '#181C1B',
+        'light-surface': '#F7FAF7',
+        'light-surface-dim': '#D7DBD8',
+        'light-surface-bright': '#F7FAF7',
+        'light-surface-container-lowest': '#FFFFFF',
+        'light-surface-container-low': '#F1F4F1',
+        'light-surface-container': '#EBEFEB',
+        'light-surface-container-high': '#E5E9E6',
+        'light-surface-container-highest': '#E0E3E0',
+        'light-on-surface': '#181C1B',
+        'light-surface-variant': '#DAE5E0',
+        'light-on-surface-variant': '#3E4945',
+        'light-outline': '#6F7975',
+        'light-outline-variant': '#BEC9C4',
+        'light-inverse-surface': '#2D312F',
+        'light-inverse-on-surface': '#EEF2EE',
+        'light-inverse-primary': '#84D6BF',
+        'dark-primary': '#84D6BF',
+        'dark-on-primary': '#00382D',
+        'dark-primary-container': '#0D6E5B',
+        'dark-on-primary-container': '#9AEDD5',
+        'dark-secondary': '#ADCDC2',
+        'dark-on-secondary': '#18362E',
+        'dark-secondary-container': '#324F46',
+        'dark-on-secondary-container': '#C9EADE',
+        'dark-tertiary': '#FFB4A4',
+        'dark-on-tertiary': '#571E12',
+        'dark-tertiary-container': '#944D3E',
+        'dark-on-tertiary-container': '#FFD3CA',
+        'dark-error': '#FFB4AB',
+        'dark-on-error': '#690005',
+        'dark-error-container': '#93000A',
+        'dark-on-error-container': '#FFDAD6',
+        'dark-background': '#101413',
+        'dark-on-background': '#E0E3E0',
+        'dark-surface': '#101413',
+        'dark-surface-dim': '#101413',
+        'dark-surface-bright': '#363A38',
+        'dark-surface-container-lowest': '#0B0F0E',
+        'dark-surface-container-low': '#181C1B',
+        'dark-surface-container': '#1C201F',
+        'dark-surface-container-high': '#272B29',
+        'dark-surface-container-highest': '#313634',
+        'dark-on-surface': '#E0E3E0',
+        'dark-surface-variant': '#3E4945',
+        'dark-on-surface-variant': '#BEC9C4',
+        'dark-outline': '#88938E',
+        'dark-outline-variant': '#3E4945',
+        'dark-inverse-surface': '#E0E3E0',
+        'dark-inverse-on-surface': '#2D312F',
+        'dark-inverse-primary': '#056B58',
+      },
+      borderRadius: {
+        'sm': '6px',
+        'DEFAULT': '10px',
+        'md': '12px',
+        'lg': '16px',
+        'xl': '24px',
+        'full': '9999px',
+      },
+      spacing: {
+        'gutter-xs': '4px',
+        'gutter-sm': '8px',
+        'gutter-md': '12px',
+        'gutter-lg': '16px',
+        'gutter-xl': '24px',
+        'section': '32px',
+        'page-margin': '16px',
+      },
+      fontFamily: {
+        'display': ['"Red Hat Display"', 'sans-serif'],
+        'headline': ['"Red Hat Display"', 'sans-serif'],
+        'title': ['"Commissioner"', 'sans-serif'],
+        'body': ['"Commissioner"', 'sans-serif'],
+        'label': ['"Commissioner"', 'sans-serif'],
+        'mono': ['"Spline Sans Mono"', 'monospace'],
+      },
+      fontSize: {
+        'display-lg': ['36px', { lineHeight: '42px', letterSpacing: '-0.5px', fontWeight: '700' }],
+        'display-lg-mobile': ['28px', { lineHeight: '34px', letterSpacing: '-0.4px', fontWeight: '700' }],
+        'headline-lg': ['24px', { lineHeight: '30px', letterSpacing: '-0.25px', fontWeight: '700' }],
+        'headline-md': ['20px', { lineHeight: '26px', letterSpacing: '-0.15px', fontWeight: '600' }],
+        'headline-sm': ['17px', { lineHeight: '22px', letterSpacing: '0px', fontWeight: '600' }],
+        'title-md': ['15px', { lineHeight: '20px', letterSpacing: '0px', fontWeight: '600' }],
+        'body-lg': ['16px', { lineHeight: '24px', letterSpacing: '0px', fontWeight: '400' }],
+        'body-md': ['14px', { lineHeight: '20px', letterSpacing: '0px', fontWeight: '400' }],
+        'body-sm': ['12px', { lineHeight: '16px', letterSpacing: '0.1px', fontWeight: '400' }],
+        'label-lg': ['14px', { lineHeight: '18px', letterSpacing: '0.1px', fontWeight: '600' }],
+        'label-md': ['12px', { lineHeight: '16px', letterSpacing: '0.2px', fontWeight: '600' }],
+        'label-sm': ['11px', { lineHeight: '14px', letterSpacing: '0.3px', fontWeight: '500' }],
+        'mono-md': ['13px', { lineHeight: '18px', letterSpacing: '0px', fontWeight: '500' }],
+      },
+      transitionDuration: {
+        'state-change': '120ms',
+        'surface-enter': '220ms',
+        'surface-exit': '150ms',
+      },
+      transitionDelay: {
+        'state-change': '0ms',
+        'surface-enter': '0ms',
+        'surface-exit': '0ms',
+      },
+      transitionTimingFunction: {
+        'state-change': 'ease-out',
+        'surface-enter': 'cubic-bezier(0.2, 0, 0, 1)',
+        'surface-exit': 'cubic-bezier(0.3, 0, 1, 1)',
+      },
+    },
+  },
+};
+if (typeof module !== 'undefined') module.exports = globalThis.tailwind.config;
+</script>
+  <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@600;700&amp;family=Commissioner:wght@400;500;600&amp;family=Spline+Sans+Mono:wght@500&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet">
+  <style>.material-symbols-outlined, .material-symbols-rounded, .material-symbols-sharp, .material-icons { display: inline-block; width: 1em; height: 1em; line-height: 1 !important; box-sizing: content-box; overflow: hidden; white-space: nowrap; direction: ltr; vertical-align: middle; }</style>
+</head>
+<body class="bg-light-surface text-light-on-surface font-body antialiased">
+  <div class="min-h-[884px] max-w-md mx-auto bg-light-surface flex flex-col" data-stitch-vh="min-h-[884px]===min-h-screen">
+
+    <!-- Top App Shell Header -->
+    <header class="sticky top-0 z-20 bg-light-surface border-b border-light-outline-variant px-page-margin py-gutter-md flex items-center justify-between gap-gutter-sm">
+      <div class="flex items-center gap-gutter-sm">
+        <div class="w-8 h-8 rounded-md bg-light-primary text-light-on-primary flex items-center justify-center">
+          <span class="material-symbols-outlined" style="font-size: 18px;">account_balance_wallet</span>
+        </div>
+        <span data-design-text-token="headline-sm" class="font-headline text-headline-sm text-light-on-surface">MinhasFinancas</span>
+      </div>
+
+      <div class="flex items-center gap-gutter-sm">
+        <button id="profile-cycle-btn" type="button" aria-label="Alternar perfil tributário" class="inline-flex items-center gap-gutter-xs px-gutter-md py-gutter-xs rounded-full bg-light-secondary-container text-light-on-secondary-container hover:bg-light-surface-variant transition-colors duration-state-change ease-state-change">
+          <span class="material-symbols-outlined" style="font-size: 15px;">badge</span>
+          <span id="header-profile-label" data-design-text-token="label-md" class="font-label text-label-md">MEI</span>
+          <span class="material-symbols-outlined" style="font-size: 15px;">expand_more</span>
+        </button>
+
+        <a href="../alarme-lembretes/AlarmeLembretes.html" aria-label="Lembrete diário às 20:00" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-light-surface-container-lowest border border-light-outline-variant text-light-primary hover:bg-light-surface-container-low transition-colors duration-state-change ease-state-change">
+          <span class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: &#39;FILL&#39; 1;">alarm_on</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 px-page-margin py-gutter-lg pb-24 flex flex-col gap-gutter-xl">
+
+      <!-- Period & Balance Hero Card -->
+      <section aria-label="Resumo do mês atual" class="flex flex-col gap-gutter-md">
+        <div class="flex items-center justify-between">
+          <div>
+            <p data-design-text-token="label-md" class="font-label text-label-md text-light-on-surface-variant">Novembro 2026 • Até 21 nov</p>
+            <h1 data-design-text-token="headline-lg" class="font-headline text-headline-lg text-light-on-surface">Painel Mensal</h1>
+          </div>
+          <a href="../cadastro-lancamentos/CadastroLancamentos.html" data-component-id="button-with-icon" data-component-type="button" data-component-variant="with-icon" class="inline-flex items-center gap-gutter-xs px-gutter-md py-gutter-sm rounded-md bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change ease-state-change">
+            <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">add</span>
+            <span data-design-text-token="label-md" class="font-label text-label-md">Lançar</span>
+          </a>
+        </div>
+
+        <!-- COMPONENT: card-elevated -->
+        <article data-component-id="card-elevated" data-component-type="card" data-component-variant="elevated" class="bg-light-surface-container-lowest border border-light-outline-variant rounded-lg p-gutter-lg flex flex-col gap-gutter-md">
+          <header class="flex items-start justify-between gap-gutter-sm">
+            <div class="flex flex-col gap-gutter-xs">
+              <span data-design-text-token="label-md" class="font-label text-label-md text-light-on-surface-variant">Saldo líquido do mês</span>
+              <p data-design-text-token="display-lg-mobile" class="font-display text-display-lg-mobile text-light-on-surface tabular-nums">R$ 6.420,00</p>
+            </div>
+            <span class="inline-flex items-center gap-gutter-xs px-gutter-sm py-gutter-xs rounded-full bg-light-secondary-container text-light-on-secondary-container">
+              <span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
+              <span data-design-text-token="label-sm" class="font-label text-label-sm tabular-nums">+14,2%</span>
+            </span>
+          </header>
+
+          <div class="grid grid-cols-2 gap-gutter-md pt-gutter-md border-t border-light-outline-variant">
+            <div class="flex flex-col gap-gutter-xs p-gutter-md rounded-md bg-light-surface-container-low">
+              <div class="flex items-center gap-gutter-xs text-light-primary">
+                <span class="material-symbols-outlined" style="font-size: 16px;">arrow_upward</span>
+                <span data-design-text-token="label-sm" class="font-label text-label-sm">Ganhos</span>
+              </div>
+              <p data-design-text-token="headline-sm" class="font-headline text-headline-sm text-light-on-surface tabular-nums">R$ 9.840,00</p>
+              <span data-design-text-token="body-sm" class="font-body text-body-sm text-light-on-surface-variant tabular-nums">Fixo R$ 6.200 • Var R$ 3.640</span>
+            </div>
+
+            <div class="flex flex-col gap-gutter-xs p-gutter-md rounded-md bg-light-surface-container-low">
+              <div class="flex items-center gap-gutter-xs text-light-error">
+                <span class="material-symbols-outlined" style="font-size: 16px;">arrow_downward</span>
+                <span data-design-text-token="label-sm" class="font-label text-label-sm">Perdas</span>
+              </div>
+              <p data-design-text-token="headline-sm" class="font-headline text-headline-sm text-light-on-surface tabular-nums">R$ 3.420,00</p>
+              <span data-design-text-token="body-sm" class="font-body text-body-sm text-light-on-surface-variant tabular-nums">Fixo R$ 2.150 • Var R$ 1.270</span>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- Monthly Comparison Chart -->
+      <section aria-label="Evolução mensal" class="flex flex-col gap-gutter-md">
+        <div class="flex items-center justify-between">
+          <h2 data-design-text-token="headline-sm" class="font-headline text-headline-sm text-light-on-surface">Ganhos vs Perdas por mês</h2>
+          <span data-design-text-token="label-sm" class="font-label text-label-sm text-light-on-surface-variant">Últimos 6 meses</span>
+        </div>
+
+        <article class="bg-light-surface-container-lowest border border-light-outline-variant rounded-lg p-gutter-lg flex flex-col gap-gutter-md">
+          <div class="flex items-center justify-between gap-gutter-sm">
+            <div class="flex items-center gap-gutter-md">
+              <span class="inline-flex items-center gap-gutter-xs">
+                <span class="w-2.5 h-2.5 rounded-full bg-light-primary"></span>
+                <span data-design-text-token="label-sm" class="font-label text-label-sm text-light-on-surface-variant">Ganhos</span>
+              </span>
+              <span class="inline-flex items-center gap-gutter-xs">
+                <span class="w-2.5 h-2.5 rounded-full bg-light-error"></span>
+                <span data-design-text-token="label-sm" class="font-label text-label-sm text-light-on-surface-variant">Perdas</span>
+              </span>
+            </div>
+            <span id="chart-selected-summary" data-design-text-token="mono-md" class="font-mono text-mono-md text-light-primary tabular-nums">Nov: +R$ 6.420</span>
+          </div>
+
+          <!-- Interactive Bar Chart -->
+          <div class="grid grid-cols-6 gap-gutter-sm items-end h-40 pt-gutter-md border-b border-light-outline-variant pb-gutter-sm">
+            <!-- Jun -->
+            <button type="button" data-month="Jun" data-gain="7200" data-loss="3100" class="chart-col flex flex-col items-center gap-gutter-xs h-full justify-end group">
+              <div class="w-full flex items-end justify-center gap-gutter-xs h-28">
+                <div class="w-2.5 rounded-sm bg-light-primary/50 group-hover:bg-light-primary transition-colors duration-state-change" style="height: 70%;"></div>
+                <div class="w-2.5 rounded-sm bg-light-error/45 group-hover:bg-light-error transition-colors duration-state-change" style="height: 30%;"></div>
+              </div>
+              <span data-design-text-token="label-sm" class="font-label text-label-sm text-light-on-surface-variant">Jun</span>
+            </button>
+
+            <!-- Jul -->
+            <button type="button" data-month="Jul" data-gain="7950" data-loss="3100" class="chart-col flex flex-col items-center gap-gutter-xs h-full justify-end group">
+              <div class="w-full flex items-end justify-center gap-gutter-xs h-28">
+                <div class="w-2.5 rounded-sm bg-light-primary/50 group-hover:bg-light-primary transition-colors duration-state-change" style="height: 78%;"></div>
+                <div class="w-2.5 rounded-sm bg-light-error/45 group-hover:bg-light-error transition-colors duration-state-change" style="height: 30%;"></div>
+              </div>
+              <span data-design-text-token="label-sm" class="font-label text-label-sm text-light-on-surface-variant">Jul</span>
+            </button>
+
+            <!-- Ago -->
+            <button type="button" data-month="Ago" data-gain="8500" data-loss="3300" class="chart-col flex flex-col items-center gap-gutter-xs h-full justify-end group">
+              <div class="w-full flex items-end justify-center gap-gutter-xs h-28">
+                <div class="w-2.5 rounded-sm bg-light-primary/50 group-hover:bg-light-primary transition-colors duration-state-change" style="height: 83%;"></div>
+                <div class="w-2.5 rounded-sm bg-light-error/45 group-hover:bg-light-error transition-colors duration-state-change" style="height: 32%;"></div>
+              </div>
+              <span data-design-text-token="label-sm" class="font-label text-label-sm text-light-on-surface-variant">Ago</span>
+            </button>
+
+            <!-- Set -->
+            <button type="button" data-month="Set" data-gain="8150" data-loss="3200" class="chart-col flex flex-col items-center gap-gutter-xs h-full justify-end group">
+              <div class="w-full flex items-end justify-center gap-gutter-xs h-28">
+                <div class="w-2.5 rounded-sm bg-light-primary/50 group-hover:bg-light-primary transition-colors duration-state-change" style="height: 80%;"></div>
+                <div class="w-2.5 rounded-sm bg-light-error/45 group-hover:bg-light-error transition-colors duration-state-change" style="height: 31%;"></div>
+              </div>
+              <span data-design-text-token="label-sm" class="font-label text-label-sm text-light-on-surface-variant">Set</span>
+            </button>
+
+            <!-- Out -->
+            <button type="button" data-month="Out" data-gain="9100" data-loss="3480" class="chart-col flex flex-col items-center gap-gutter-xs h-full justify-end group">
+              <div class="w-full flex items-end justify-center gap-gutter-xs h-28">
+                <div class="w-2.5 rounded-sm bg-light-primary/50 group-hover:bg-light-primary transition-colors duration-state-change" style="height: 90%;"></div>
+                <div class="w-2.5 rounded-sm bg-light-error/45 group-hover:bg-light-error transition-colors duration-state-change" style="height: 34%;"></div>
+              </div>
+              <span data-design-text-token="label-sm" class="font-label text-label-sm text-light-on-surface-variant">Out</span>
+            </button>
+
+            <!-- Nov (Atual) -->
+            <button type="button" data-month="Nov" data-gain="9840" data-loss="3420" class="chart-col flex flex-col items-center gap-gutter-xs h-full justify-end group">
+              <div class="w-full flex items-end justify-center gap-gutter-xs h-28">
+                <div class="w-2.5 rounded-sm bg-light-primary" style="height: 98%;"></div>
+                <div class="w-2.5 rounded-sm bg-light-error" style="height: 34%;"></div>
+              </div>
+              <span data-design-text-token="label-sm" class="font-label text-label-sm text-light-primary">Nov</span>
+            </button>
+          </div>
+
+          <p id="chart-detail-line" data-design-text-token="body-sm" class="font-body text-body-sm text-light-on-surface-variant tabular-nums">
+            Novembro (parcial): Ganhos R$ 9.840,00 • Perdas R$ 3.420,00
+          </p>
+        </article>
+      </section>
+
+      <!-- Fixed vs Variable Breakdown -->
+      <section aria-label="Composição fixo e variável" class="flex flex-col gap-gutter-md">
+        <h2 data-design-text-token="headline-sm" class="font-headline text-headline-sm text-light-on-surface">Fixos vs Variáveis</h2>
+
+        <article class="bg-light-surface-container-lowest border border-light-outline-variant rounded-lg p-gutter-lg flex flex-col gap-gutter-md">
+          <div class="flex flex-col gap-gutter-xs">
+            <div class="flex items-center justify-between">
+              <span data-design-text-token="label-md" class="font-label text-label-md text-light-on-surface">Ganhos (63% Fixo / 37% Variável)</span>
+              <span data-design-text-token="mono-md" class="font-mono text-mono-md text-light-primary tabular-nums">R$ 9.840</span>
+            </div>
+            <div class="w-full h-2.5 rounded-full bg-light-surface-container-high overflow-hidden flex">
+              <div class="h-full bg-light-primary" style="width: 63%;"></div>
+              <div class="h-full bg-light-secondary-container" style="width: 37%;"></div>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-gutter-xs">
+            <div class="flex items-center justify-between">
+              <span data-design-text-token="label-md" class="font-label text-label-md text-light-on-surface">Perdas (63% Fixo / 37% Variável)</span>
+              <span data-design-text-token="mono-md" class="font-mono text-mono-md text-light-error tabular-nums">R$ 3.420</span>
+            </div>
+            <div class="w-full h-2.5 rounded-full bg-light-surface-container-high overflow-hidden flex">
+              <div class="h-full bg-light-error" style="width: 63%;"></div>
+              <div class="h-full bg-light-error-container" style="width: 37%;"></div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- Tax & Recent Entries Summary -->
+      <section aria-label="Imposto estimado e lançamentos" class="flex flex-col gap-gutter-md">
+        <div class="flex items-center justify-between">
+          <h2 data-design-text-token="headline-sm" class="font-headline text-headline-sm text-light-on-surface">Últimos lançamentos</h2>
+          <a href="../cadastro-lancamentos/CadastroLancamentos.html" data-design-text-token="label-md" class="font-label text-label-md text-light-primary">Ver todos</a>
+        </div>
+
+        <div class="flex flex-col gap-gutter-sm">
+          <!-- COMPONENT: card-interactive -->
+          <a href="../cadastro-lancamentos/CadastroLancamentos.html" data-component-id="card-interactive" data-component-type="card" data-component-variant="interactive" class="bg-light-surface-container-lowest border border-light-outline-variant rounded-lg p-gutter-md flex items-center justify-between gap-gutter-md hover:bg-light-surface-container-low transition-colors duration-state-change ease-state-change">
+            <div class="flex items-center gap-gutter-md">
+              <div class="w-10 h-10 rounded-md bg-light-secondary-container text-light-on-secondary-container flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined" style="font-size: 20px;">trending_up</span>
+              </div>
+              <div>
+                <h3 data-design-text-token="title-md" class="font-title text-title-md text-light-on-surface">Consultoria UX</h3>
+                <p data-design-text-token="body-sm" class="font-body text-body-sm text-light-on-surface-variant">Ganho • Variável • 18 nov</p>
+              </div>
+            </div>
+            <p data-design-text-token="title-md" class="font-title text-title-md text-light-primary tabular-nums shrink-0">+ R$ 3.200,00</p>
+          </a>
+
+          <a href="../cadastro-lancamentos/CadastroLancamentos.html" class="bg-light-surface-container-lowest border border-light-outline-variant rounded-lg p-gutter-md flex items-center justify-between gap-gutter-md hover:bg-light-surface-container-low transition-colors duration-state-change ease-state-change">
+            <div class="flex items-center gap-gutter-md">
+              <div class="w-10 h-10 rounded-md bg-light-error-container text-light-on-error-container flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined" style="font-size: 20px;">receipt</span>
+              </div>
+              <div>
+                <h3 data-design-text-token="title-md" class="font-title text-title-md text-light-on-surface">Aluguel e Condomínio</h3>
+                <p data-design-text-token="body-sm" class="font-body text-body-sm text-light-on-surface-variant">Perda • Fixo • 10 nov</p>
+              </div>
+            </div>
+            <p data-design-text-token="title-md" class="font-title text-title-md text-light-error tabular-nums shrink-0">- R$ 1.850,00</p>
+          </a>
+
+          <a href="../calculo-impostos/CalculoImpostos.html" class="bg-light-surface-container-lowest border border-light-outline-variant rounded-lg p-gutter-md flex items-center justify-between gap-gutter-md hover:bg-light-surface-container-low transition-colors duration-state-change ease-state-change">
+            <div class="flex items-center gap-gutter-md">
+              <div class="w-10 h-10 rounded-md bg-warning-container text-on-warning-container flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined" style="font-size: 20px;">account_balance</span>
+              </div>
+              <div>
+                <h3 data-design-text-token="title-md" class="font-title text-title-md text-light-on-surface">Imposto estimado (<span id="tax-card-profile">MEI</span>)</h3>
+                <p data-design-text-token="body-sm" class="font-body text-body-sm text-light-on-surface-variant">Competência nov • Vence dia 20</p>
+              </div>
+            </div>
+            <p id="tax-card-amount" data-design-text-token="title-md" class="font-title text-title-md text-warning tabular-nums shrink-0">R$ 76,60</p>
+          </a>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Shell -->
+    <nav aria-label="Navegação principal" class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-30 bg-light-surface-container-lowest border-t border-light-outline-variant px-gutter-sm py-gutter-sm grid grid-cols-4 gap-gutter-xs">
+      <a href="../painel-mensal/PainelMensal.html" aria-current="page" class="flex flex-col items-center justify-center gap-gutter-xs py-gutter-xs rounded-md text-light-primary bg-light-secondary-container/60">
+        <span class="material-symbols-outlined" style="font-size: 22px; font-variation-settings: &#39;FILL&#39; 1;">bar_chart</span>
+        <span data-design-text-token="label-sm" class="font-label text-label-sm">Painel</span>
+      </a>
+      <a href="../cadastro-lancamentos/CadastroLancamentos.html" class="flex flex-col items-center justify-center gap-gutter-xs py-gutter-xs rounded-md text-light-on-surface-variant hover:bg-light-surface-container-low transition-colors duration-state-change">
+        <span class="material-symbols-outlined" style="font-size: 22px;">add_circle</span>
+        <span data-design-text-token="label-sm" class="font-label text-label-sm">Lançar</span>
+      </a>
+      <a href="../calculo-impostos/CalculoImpostos.html" class="flex flex-col items-center justify-center gap-gutter-xs py-gutter-xs rounded-md text-light-on-surface-variant hover:bg-light-surface-container-low transition-colors duration-state-change">
+        <span class="material-symbols-outlined" style="font-size: 22px;">receipt_long</span>
+        <span data-design-text-token="label-sm" class="font-label text-label-sm">Impostos</span>
+      </a>
+      <a href="../alarme-lembretes/AlarmeLembretes.html" class="flex flex-col items-center justify-center gap-gutter-xs py-gutter-xs rounded-md text-light-on-surface-variant hover:bg-light-surface-container-low transition-colors duration-state-change">
+        <span class="material-symbols-outlined" style="font-size: 22px;">alarm</span>
+        <span data-design-text-token="label-sm" class="font-label text-label-sm">Alarme</span>
+      </a>
+    </nav>
+
+  </div>
+
+  <script>
+    (function () {
+      var profiles = [
+        { key: 'MEI', tax: 'R$ 76,60' },
+        { key: 'PF', tax: 'R$ 1.182,40' },
+        { key: 'Autônomo', tax: 'R$ 1.476,00' },
+        { key: 'Freelancer', tax: 'R$ 885,60' },
+        { key: 'PJ', tax: 'R$ 590,40' }
+      ];
+      var idx = 0;
+      try {
+        var saved = localStorage.getItem('minhasfinancas_profile');
+        if (saved) {
+          var found = profiles.findIndex(function (p) { return p.key === saved; });
+          if (found >= 0) idx = found;
+        }
+      } catch (e) {}
+
+      function applyProfile() {
+        var p = profiles[idx];
+        document.getElementById('header-profile-label').textContent = p.key;
+        document.getElementById('tax-card-profile').textContent = p.key;
+        document.getElementById('tax-card-amount').textContent = p.tax;
+      }
+      applyProfile();
+
+      document.getElementById('profile-cycle-btn').addEventListener('click', function () {
+        idx = (idx + 1) % profiles.length;
+        try { localStorage.setItem('minhasfinancas_profile', profiles[idx].key); } catch (e) {}
+        applyProfile();
+      });
+
+      var cols = document.querySelectorAll('.chart-col');
+      cols.forEach(function (col) {
+        col.addEventListener('click', function () {
+          var m = col.getAttribute('data-month');
+          var g = Number(col.getAttribute('data-gain'));
+          var l = Number(col.getAttribute('data-loss'));
+          var net = g - l;
+          document.getElementById('chart-selected-summary').textContent = m + ': +R$ ' + net.toLocaleString('pt-BR');
+          document.getElementById('chart-detail-line').textContent = m + ': Ganhos R$ ' + g.toLocaleString('pt-BR') + ',00 • Perdas R$ ' + l.toLocaleString('pt-BR') + ',00';
+        });
+      });
+    })();
+  </script>
+
+
+</body></html>
