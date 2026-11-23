@@ -5,11 +5,11 @@ import { Alert, Platform, Pressable, ScrollView, Text, TextInput, View } from 'r
 
 import { EntryRow } from '@/components/EntryRow';
 import { MonthBar } from '@/components/MonthBar';
-import { usePalette } from '@/components/usePalette';
 import { Card, FieldError, FieldLabel, PrimaryButton, SwitchRow } from '@/components/ui';
+import { usePalette } from '@/components/usePalette';
 import { useFinance } from '@/src/db/FinanceContext';
 import { formatBrDate, monthKey, monthLabel, parseBrDate, todayISO } from '@/src/domain/dates';
-import { formatAmountInput, parseMoneyToCents } from '@/src/domain/money';
+import { formatAmountInput, formatCents, parseMoneyToCents } from '@/src/domain/money';
 import { CATEGORIES, PROFILE_LABEL, type EntryNature, type EntryType } from '@/src/domain/types';
 
 type FormState = {
@@ -20,7 +20,8 @@ type FormState = {
   category: string;
   date: string;
   deductible: boolean;
-  repeat: boolean;
+  parceled: boolean;
+  installments: number;
 };
 
 type FormErrors = Partial<Record<'amount' | 'description' | 'date' | 'summary', string>>;
@@ -34,7 +35,8 @@ function emptyForm(): FormState {
     category: 'Serviços',
     date: formatBrDate(todayISO()),
     deductible: false,
-    repeat: false,
+    parceled: false,
+    installments: 1,
   };
 }
 
@@ -76,7 +78,8 @@ export default function LancarScreen() {
       category: entry.category,
       date: formatBrDate(entry.date),
       deductible: entry.deductible,
-      repeat: entry.recurrenceId !== null,
+      parceled: false,
+      installments: 1,
     });
   }, [editingId, entries]);
 
@@ -104,6 +107,8 @@ export default function LancarScreen() {
       setFeedback('');
       return;
     }
+    const savedParcels =
+      !editingId && form.nature === 'variavel' && form.parceled ? Math.min(60, Math.max(2, form.installments)) : 1;
     await saveEntry({
       id: editingId,
       type: form.type,
@@ -113,10 +118,10 @@ export default function LancarScreen() {
       category: form.category,
       date: date ?? todayISO(),
       deductible: form.deductible,
-      repeat: form.repeat,
+      installments: savedParcels,
     });
     setErrors({});
-    setFeedback(editingId ? 'Alterações salvas.' : 'Lançamento salvo.');
+    setFeedback(editingId ? 'Alterações salvas.' : savedParcels > 1 ? `${savedParcels} parcelas salvas.` : 'Lançamento salvo.');
     setListMonth(monthKey(date ?? todayISO()));
     if (editingId) router.setParams({ id: '' });
     else setForm(emptyForm());
@@ -126,7 +131,9 @@ export default function LancarScreen() {
     if (!editingId) return;
     const message = editing?.recurrenceId
       ? 'Excluir só este mês? Os próximos continuam na repetição.'
-      : 'Excluir este lançamento? Esta ação não desfaz.';
+      : editing?.installmentCount && editing.installmentCount > 1
+        ? 'Excluir só esta parcela? As outras continuam.'
+        : 'Excluir este lançamento? Esta ação não desfaz.';
     const run = async () => {
       await removeEntry(editingId);
       router.setParams({ id: '' });
@@ -200,13 +207,15 @@ export default function LancarScreen() {
               selected={form.nature === 'variavel'}
               selectedClass="bg-secondary-container"
               selectedText="text-on-secondary-container"
-              onPress={() => setForm((current) => ({ ...current, nature: 'variavel', repeat: false }))}
+              onPress={() => setForm((current) => ({ ...current, nature: 'variavel' }))}
             />
           </View>
         </View>
 
         <View className="gap-1">
-          <FieldLabel>Valor</FieldLabel>
+          <FieldLabel>
+            {form.nature === 'variavel' && !editingId && form.parceled ? 'Valor de cada parcela' : 'Valor'}
+          </FieldLabel>
           <View className="flex-row items-center rounded-md border border-outline-variant bg-surface-lowest px-3">
             <Text className="font-mono text-mono-md text-on-surface-variant">R$</Text>
             <TextInput
@@ -280,17 +289,40 @@ export default function LancarScreen() {
           />
         ) : null}
         {form.nature === 'fixo' ? (
-          <SwitchRow
-            title="Repetir todo mês"
-            description={
-              editing?.recurrenceId
-                ? 'Alterar o valor aqui vale só para este mês. Desligar encerra os próximos.'
-                : 'Cria este lançamento também nos meses seguintes, quando você abrir o app.'
-            }
-            value={form.repeat}
-            onValueChange={(repeat) => setForm((current) => ({ ...current, repeat }))}
-          />
-        ) : null}
+          <Text className="font-body text-body-sm text-on-surface-variant">
+            {editing?.recurrenceId
+              ? 'Fixo entra todo mês. Alterar o valor aqui vale só para este mês.'
+              : 'Fixo entra todo mês, a partir da data escolhida.'}
+          </Text>
+        ) : editing?.installmentCount && editing.installmentCount > 1 ? (
+          <Text className="font-body text-body-sm text-on-surface-variant">
+            Parcela {editing.installmentIndex} de {editing.installmentCount}. Alterar o valor vale só para este mês.
+          </Text>
+        ) : !editingId ? (
+          <View className="gap-3">
+            <SwitchRow
+              title="Parcelas"
+              description="Divide o valor em vários meses. Cada parcela usa o mesmo valor."
+              value={form.parceled}
+              onValueChange={(parceled) =>
+                setForm((current) => ({
+                  ...current,
+                  parceled,
+                  installments: parceled ? Math.max(2, current.installments) : 1,
+                }))
+              }
+            />
+            {form.parceled ? (
+              <InstallmentField
+                count={form.installments}
+                amountCents={parseMoneyToCents(form.amount)}
+                onChange={(installments) => setForm((current) => ({ ...current, installments }))}
+              />
+            ) : null}
+          </View>
+        ) : (
+          <Text className="font-body text-body-sm text-on-surface-variant">Variável entra só neste mês.</Text>
+        )}
 
         <PrimaryButton
           label={editingId ? 'Salvar alterações' : 'Salvar lançamento'}
@@ -340,6 +372,52 @@ export default function LancarScreen() {
         )}
       </View>
     </ScrollView>
+  );
+}
+
+function InstallmentField({
+  count,
+  amountCents,
+  onChange,
+}: {
+  count: number;
+  amountCents: number | null;
+  onChange: (count: number) => void;
+}) {
+  const colors = usePalette();
+  const total = amountCents && amountCents > 0 ? amountCents * count : null;
+  return (
+    <View className="gap-2">
+      <FieldLabel>Parcelas</FieldLabel>
+      <View className="flex-row items-center justify-center gap-3">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Diminuir parcelas"
+          accessibilityState={{ disabled: count <= 2 }}
+          disabled={count <= 2}
+          onPress={() => onChange(Math.max(2, count - 1))}
+          className="h-12 w-12 items-center justify-center rounded-md border border-outline-variant bg-surface-lowest"
+          style={({ pressed }) => ({ opacity: count <= 2 ? 0.4 : pressed ? 0.85 : 1 })}>
+          <MaterialIcons name="remove" size={22} color={colors.onSurface} />
+        </Pressable>
+        <Text className="min-w-12 text-center font-mono text-headline-lg text-on-surface">{count}</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Aumentar parcelas"
+          accessibilityState={{ disabled: count >= 60 }}
+          disabled={count >= 60}
+          onPress={() => onChange(Math.min(60, count + 1))}
+          className="h-12 w-12 items-center justify-center rounded-md border border-outline-variant bg-surface-lowest"
+          style={({ pressed }) => ({ opacity: count >= 60 ? 0.4 : pressed ? 0.85 : 1 })}>
+          <MaterialIcons name="add" size={22} color={colors.onSurface} />
+        </Pressable>
+      </View>
+      <Text className="font-body text-body-sm text-on-surface-variant">
+        {total
+          ? `${count} parcelas de ${formatCents(amountCents ?? 0)}. Total ${formatCents(total)}.`
+          : `${count} parcelas, uma em cada mês a partir da data escolhida.`}
+      </Text>
+    </View>
   );
 }
 

@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-import { clampDay, createId, monthKey, monthsInclusive, todayISO } from '@/src/domain/dates';
+import { clampDay, createId, monthKey, monthsInclusive, shiftDate, todayISO } from '@/src/domain/dates';
 import {
     defaultAlarm,
     defaultProfile,
@@ -24,6 +24,10 @@ type EntryRow = {
   date: string;
   deductible: number;
   recurrence_id: string | null;
+  installment_group: string | null;
+  installment_index: number | null;
+  installment_count: number | null;
+  profile_id?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -97,7 +101,11 @@ export async function openFinanceDb(): Promise<SQLite.SQLiteDatabase> {
   `);
   await ensureColumn(db, 'entries', 'profile_id', 'TEXT');
   await ensureColumn(db, 'recurrences', 'profile_id', 'TEXT');
+  await ensureColumn(db, 'entries', 'installment_group', 'TEXT');
+  await ensureColumn(db, 'entries', 'installment_index', 'INTEGER');
+  await ensureColumn(db, 'entries', 'installment_count', 'INTEGER');
   await db.execAsync('CREATE INDEX IF NOT EXISTS idx_entries_profile_date ON entries(profile_id, date);');
+  await attachFixedRecurrences(db);
   await materializeRecurrences(db, todayISO());
   return db;
 }
@@ -105,7 +113,7 @@ export async function openFinanceDb(): Promise<SQLite.SQLiteDatabase> {
 async function ensureColumn(
   db: SQLite.SQLiteDatabase,
   table: 'entries' | 'recurrences',
-  column: 'profile_id',
+  column: string,
   definition: string,
 ): Promise<void> {
   const columns = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(${table})`);
@@ -124,6 +132,9 @@ function mapEntry(row: EntryRow): Entry {
     date: row.date,
     deductible: row.deductible === 1,
     recurrenceId: row.recurrence_id,
+    installmentGroup: row.installment_group,
+    installmentIndex: row.installment_index,
+    installmentCount: row.installment_count,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -330,8 +341,9 @@ export async function saveAlarm(db: SQLite.SQLiteDatabase, alarm: AlarmSettings)
 async function insertEntry(db: SQLite.SQLiteDatabase, profileId: string, entry: Entry): Promise<void> {
   await db.runAsync(
     `INSERT INTO entries (
-      id, profile_id, type, nature, amount_cents, description, category, date, deductible, recurrence_id, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      id, profile_id, type, nature, amount_cents, description, category, date, deductible, recurrence_id,
+      installment_group, installment_index, installment_count, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     entry.id,
     profileId,
     entry.type,
@@ -342,6 +354,9 @@ async function insertEntry(db: SQLite.SQLiteDatabase, profileId: string, entry: 
     entry.date,
     entry.deductible ? 1 : 0,
     entry.recurrenceId,
+    entry.installmentGroup,
+    entry.installmentIndex,
+    entry.installmentCount,
     entry.createdAt,
     entry.updatedAt,
   );
@@ -387,6 +402,9 @@ export async function materializeRecurrences(db: SQLite.SQLiteDatabase, today: s
         date: clampDay(month, rule.day_of_month),
         deductible: rule.deductible === 1,
         recurrenceId: rule.id,
+        installmentGroup: null,
+        installmentIndex: null,
+        installmentCount: null,
         createdAt: now,
         updatedAt: now,
       });
@@ -394,11 +412,48 @@ export async function materializeRecurrences(db: SQLite.SQLiteDatabase, today: s
   }
 }
 
+const MAX_INSTALLMENTS = 60;
+
+function installmentTotal(draft: EntryDraft): number {
+  if (draft.id || draft.nature !== 'variavel') return 1;
+  const count = Math.round(draft.installments);
+  if (!Number.isInteger(count) || count < 1) return 1;
+  return Math.min(count, MAX_INSTALLMENTS);
+}
+
+async function attachFixedRecurrences(db: SQLite.SQLiteDatabase): Promise<void> {
+  const rows = await db.getAllAsync<EntryRow>(
+    `SELECT * FROM entries WHERE nature = 'fixo' AND recurrence_id IS NULL AND profile_id IS NOT NULL`,
+  );
+  const now = new Date().toISOString();
+  for (const row of rows) {
+    if (!row.profile_id) continue;
+    const recurrenceId = createId();
+    await db.runAsync(
+      `INSERT INTO recurrences (
+        id, profile_id, type, amount_cents, description, category, deductible, day_of_month, start_month, active, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+      recurrenceId,
+      row.profile_id,
+      row.type,
+      row.amount_cents,
+      row.description,
+      row.category,
+      row.deductible,
+      Number(row.date.slice(8, 10)),
+      monthKey(row.date),
+      now,
+    );
+    await db.runAsync('UPDATE entries SET recurrence_id = ? WHERE id = ?', recurrenceId, row.id);
+  }
+}
+
 export async function saveEntry(db: SQLite.SQLiteDatabase, profileId: string, draft: EntryDraft): Promise<void> {
   const now = new Date().toISOString();
   const description = draft.description.trim();
   const deductible = draft.type === 'perda' ? draft.deductible : false;
-  const repeat = draft.repeat && draft.nature === 'fixo';
+  const repeat = draft.nature === 'fixo';
+  const parcels = installmentTotal(draft);
 
   await db.withTransactionAsync(async () => {
     if (draft.id) {
@@ -465,19 +520,44 @@ export async function saveEntry(db: SQLite.SQLiteDatabase, profileId: string, dr
           now,
         );
       }
-      await insertEntry(db, profileId, {
-        id: createId(),
-        type: draft.type,
-        nature: draft.nature,
-        amountCents: draft.amountCents,
-        description,
-        category: draft.category,
-        date: draft.date,
-        deductible,
-        recurrenceId,
-        createdAt: now,
-        updatedAt: now,
-      });
+      if (parcels > 1) {
+        const group = createId();
+        for (let index = 0; index < parcels; index += 1) {
+          await insertEntry(db, profileId, {
+            id: createId(),
+            type: draft.type,
+            nature: 'variavel',
+            amountCents: draft.amountCents,
+            description,
+            category: draft.category,
+            date: shiftDate(draft.date, index),
+            deductible,
+            recurrenceId: null,
+            installmentGroup: group,
+            installmentIndex: index + 1,
+            installmentCount: parcels,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+      } else {
+        await insertEntry(db, profileId, {
+          id: createId(),
+          type: draft.type,
+          nature: draft.nature,
+          amountCents: draft.amountCents,
+          description,
+          category: draft.category,
+          date: draft.date,
+          deductible,
+          recurrenceId,
+          installmentGroup: null,
+          installmentIndex: null,
+          installmentCount: null,
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
     }
     await materializeRecurrences(db, todayISO());
   });

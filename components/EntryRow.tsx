@@ -17,7 +17,12 @@ export function EntryRow({ entry, onPress }: { entry: Entry; onPress: () => void
     : entry.nature === 'fixo'
       ? 'home'
       : 'flash-on';
-  const natureLabel = entry.nature === 'fixo' ? 'Fixo' : 'Variável';
+  const natureLabel =
+    entry.installmentCount && entry.installmentCount > 1 && entry.installmentIndex
+      ? `Parcela ${entry.installmentIndex}/${entry.installmentCount}`
+      : entry.nature === 'fixo'
+        ? 'Fixo'
+        : 'Variável';
   const typeLabel = gain ? 'Ganho' : 'Perda';
 
   return (
@@ -42,12 +47,12 @@ export function EntryRow({ entry, onPress }: { entry: Entry; onPress: () => void
           <Text className="font-title text-title-md text-on-surface" numberOfLines={1}>
             {entry.description}
           </Text>
-          <Text className="font-body text-body-sm text-on-surface-variant">
+          <Text className="font-body text-body-sm text-on-surface-variant" numberOfLines={1}>
             {entry.category} • {natureLabel} • {shortDayLabel(entry.date)}
           </Text>
         </View>
       </View>
-      <MoneyText className={`font-title text-title-md ${gain ? 'text-primary' : 'text-error'}`}>
+      <MoneyText mode="end" className={`font-title ${gain ? 'text-primary' : 'text-error'}`} maxFontSize={15}>
         {formatSignedCents(entry.amountCents, entry.type)}
       </MoneyText>
     </Pressable>

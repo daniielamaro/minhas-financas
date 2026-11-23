@@ -45,6 +45,9 @@ export type Entry = {
   date: string;
   deductible: boolean;
   recurrenceId: string | null;
+  installmentGroup: string | null;
+  installmentIndex: number | null;
+  installmentCount: number | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -58,7 +61,7 @@ export type EntryDraft = {
   category: string;
   date: string;
   deductible: boolean;
-  repeat: boolean;
+  installments: number;
 };
 
 export const CATEGORIES = [

@@ -1,5 +1,6 @@
 import { monthKey } from './dates';
-import type { Entry } from './types';
+import { estimateTax, type TaxEstimate } from './tax';
+import type { Entry, LedgerProfile } from './types';
 
 export type MonthTotals = {
   month: string;
@@ -11,7 +12,14 @@ export type MonthTotals = {
   losses: number;
   net: number;
   deductible: number;
+  taxCents: number;
   partial: boolean;
+};
+
+export type SettledMonth = {
+  totals: MonthTotals;
+  estimate: TaxEstimate;
+  appliedTaxCents: number;
 };
 
 export function countsInMonth(entry: Entry, month: string, today: string): boolean {
@@ -31,6 +39,7 @@ export function aggregateMonth(entries: Entry[], month: string, today: string): 
     losses: 0,
     net: 0,
     deductible: 0,
+    taxCents: 0,
     partial: month === monthKey(today),
   };
 
@@ -50,6 +59,47 @@ export function aggregateMonth(entries: Entry[], month: string, today: string): 
 
   totals.net = totals.gains - totals.losses;
   return totals;
+}
+
+export function sumImpostos(entries: Entry[], month: string, today: string): number {
+  return entries.reduce((sum, entry) => {
+    if (entry.type !== 'perda' || entry.category !== 'Impostos') return sum;
+    if (!countsInMonth(entry, month, today)) return sum;
+    return sum + entry.amountCents;
+  }, 0);
+}
+
+export function applyEstimatedTax(totals: MonthTotals, taxCents: number): MonthTotals {
+  const tax = Math.max(0, Math.round(taxCents));
+  return {
+    ...totals,
+    taxCents: tax,
+    losses: totals.losses + tax,
+    net: totals.net - tax,
+  };
+}
+
+export function settleMonth(entries: Entry[], profile: LedgerProfile, month: string, today: string): SettledMonth {
+  const base = aggregateMonth(entries, month, today);
+  const booked = sumImpostos(entries, month, today);
+  const active = base.gains > 0 || base.losses > 0 || month === monthKey(today);
+  const estimate = estimateTax({
+    kind: profile.kind,
+    grossCents: base.gains,
+    deductibleCents: base.deductible,
+    yearToDateGrossCents: sumGainsYearToDate(entries, month, today),
+    meiActivity: profile.meiActivity,
+    issRate: profile.issRate,
+    inssEnabled: profile.inssEnabled,
+    reserveRate: profile.reserveRate,
+    pjRate: profile.pjRate,
+  });
+  const added = active ? Math.max(0, estimate.totalCents - booked) : 0;
+  return {
+    totals: applyEstimatedTax(base, added),
+    estimate,
+    appliedTaxCents: active ? estimate.totalCents : 0,
+  };
 }
 
 export function changeRatio(current: number, previous: number): number | null {

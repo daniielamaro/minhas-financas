@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { usePalette } from '@/components/usePalette';
@@ -14,17 +14,47 @@ export function Card({ children, label }: { children: ReactNode; label?: string 
   );
 }
 
+function fittedSize(text: string, width: number, max: number, min: number) {
+  if (width <= 0) return max;
+  const estimate = Math.floor(width / (Math.max(text.length, 1) * 0.7));
+  return Math.min(max, Math.max(min, estimate));
+}
+
 export function MoneyText({
   children,
   className,
+  maxFontSize = 17,
+  minFontSize = 11,
+  mode = 'fill',
 }: {
   children: string;
   className?: string;
+  maxFontSize?: number;
+  minFontSize?: number;
+  mode?: 'fill' | 'end';
 }) {
+  const [width, setWidth] = useState(0);
+  const fontSize = fittedSize(children, width, maxFontSize, minFontSize);
   return (
-    <Text className={className} style={{ fontVariant: ['tabular-nums'] }}>
-      {children}
-    </Text>
+    <View
+      className={mode === 'fill' ? 'w-full min-w-0 overflow-hidden' : 'max-w-[48%] min-w-0 shrink overflow-hidden'}
+      onLayout={(event) => {
+        const next = Math.floor(event.nativeEvent.layout.width);
+        setWidth((current) => (current === next ? current : next));
+      }}>
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={Math.min(1, minFontSize / maxFontSize)}
+        className={className}
+        style={{
+          fontSize,
+          lineHeight: Math.round(fontSize * 1.25),
+          fontVariant: ['tabular-nums'],
+        }}>
+        {children}
+      </Text>
+    </View>
   );
 }
 

@@ -27,6 +27,22 @@ import {
   type ProfileKind,
 } from '@/src/domain/types';
 
+function noticeFor(result: ScheduleResult): string | null {
+  if (result.scheduled) {
+    return result.exact
+      ? null
+      : 'O alarme foi salvo, mas o Android pode atrasar o toque. Permita alarmes e lembretes exatos para Minhas Finanças.';
+  }
+  if (result.reason === 'permission') {
+    return 'A permissão de notificação está negada. Ative nas configurações do aparelho.';
+  }
+  if (result.reason === 'web') {
+    return 'A preferência ficou salva. O alarme no horário funciona no celular, não neste navegador.';
+  }
+  if (result.reason === 'empty') return 'Escolha ao menos um dia da semana.';
+  return null;
+}
+
 type FinanceContextValue = {
   ready: boolean;
   error: string | null;
@@ -80,10 +96,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         setDb(database);
         const nextAlarm = await hydrate(database);
         if (nextAlarm.enabled) {
-          const result = await rescheduleAlarm(nextAlarm);
-          if (result.scheduled === false && result.reason === 'permission') {
-            setAlarmNotice('A permissão de notificação está negada. Ative nas configurações do aparelho.');
-          }
+          setAlarmNotice(noticeFor(await rescheduleAlarm(nextAlarm)));
         }
         setReady(true);
       })
@@ -161,18 +174,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       if (!db) return { scheduled: false, reason: 'disabled' } as ScheduleResult;
       await persistAlarm(db, next);
       setAlarmState(next);
-      const result = await rescheduleAlarm(next);
-      if (result.scheduled) {
-        setAlarmNotice(null);
-      } else if (result.reason === 'permission') {
-        setAlarmNotice('A permissão de notificação está negada. Ative nas configurações do aparelho.');
-      } else if (result.reason === 'web') {
-        setAlarmNotice('A preferência ficou salva. O aviso no horário funciona no celular, não neste navegador.');
-      } else if (result.reason === 'empty') {
-        setAlarmNotice('Escolha ao menos um dia da semana.');
-      } else {
-        setAlarmNotice(null);
-      }
+      const result = await rescheduleAlarm(next, true);
+      setAlarmNotice(noticeFor(result));
       return result;
     },
     [db],

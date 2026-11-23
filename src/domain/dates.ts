@@ -63,6 +63,10 @@ export function monthsInclusive(start: string, end: string): string[] {
   return months;
 }
 
+export function shiftDate(isoDate: string, months: number): string {
+  return clampDay(addMonths(monthKey(isoDate), months), Number(isoDate.slice(8, 10)));
+}
+
 export function clampDay(month: string, day: number): string {
   const [year, monthNumber] = month.split('-').map(Number);
   const lastDay = new Date(year, monthNumber, 0).getDate();

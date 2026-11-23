@@ -10,8 +10,7 @@ import { Card, MoneyText, PrimaryButton } from '@/components/ui';
 import { useFinance } from '@/src/db/FinanceContext';
 import { chartMonthLabel, lastMonths, monthKey, monthLabel, periodCaption, todayISO } from '@/src/domain/dates';
 import { formatCents, formatRatio } from '@/src/domain/money';
-import { aggregateMonth, changeRatio, share, sumGainsYearToDate } from '@/src/domain/months';
-import { estimateTax } from '@/src/domain/tax';
+import { changeRatio, settleMonth, share } from '@/src/domain/months';
 import { PROFILE_LABEL } from '@/src/domain/types';
 
 export default function PainelScreen() {
@@ -25,33 +24,23 @@ export default function PainelScreen() {
     setChartMonth(month);
   }, [month]);
 
-  const totals = aggregateMonth(entries, month, today);
-  const previous = aggregateMonth(entries, lastMonths(month, 2)[0], today);
-  const ratio = changeRatio(totals.net, previous.net);
-  const series = useMemo(
-    () => lastMonths(month, 6).map((item) => aggregateMonth(entries, item, today)),
-    [entries, month, today],
-  );
+  const settled = useMemo(() => {
+    if (!profile) return [];
+    return lastMonths(month, 6).map((item) => settleMonth(entries, profile, item, today));
+  }, [entries, month, profile, today]);
+  const current = settled.find((item) => item.totals.month === month);
+  const totals = current?.totals;
+  const previous = settled.find((item) => item.totals.month === lastMonths(month, 2)[0])?.totals;
+  const ratio = totals && previous ? changeRatio(totals.net, previous.net) : null;
+  const series = settled.map((item) => item.totals);
   const maxValue = Math.max(1, ...series.flatMap((item) => [item.gains, item.losses]));
-  const selected = series.find((item) => item.month === chartMonth) ?? totals;
   const recent = entries.filter((entry) => entry.date.startsWith(month) && (month !== monthKey(today) || entry.date <= today)).slice(0, 3);
-  const tax = profile
-    ? estimateTax({
-    kind: profile.kind,
-    grossCents: totals.gains,
-    deductibleCents: totals.deductible,
-    yearToDateGrossCents: sumGainsYearToDate(entries, month, today),
-    meiActivity: profile.meiActivity,
-    issRate: profile.issRate,
-    inssEnabled: profile.inssEnabled,
-    reserveRate: profile.reserveRate,
-    pjRate: profile.pjRate,
-  })
-    : null;
+  const tax = current?.estimate ?? null;
 
-  if (!profile || !tax) {
+  if (!profile || !tax || !totals) {
     return <View className="flex-1 bg-surface" />;
   }
+  const selected = series.find((item) => item.month === chartMonth) ?? totals;
   const gainFixedShare = share(totals.gainsFixed, totals.gains);
   const lossFixedShare = share(totals.lossesFixed, totals.losses);
   const movement = series.some((item) => item.gains > 0 || item.losses > 0);
@@ -82,15 +71,17 @@ export default function PainelScreen() {
           <View className="flex-row items-start justify-between gap-3">
             <View className="flex-1 gap-1">
               <Text className="font-title text-label-md text-on-surface-variant">Saldo líquido do mês</Text>
-              <MoneyText className="font-display text-display-mobile text-on-surface">{formatCents(totals.net)}</MoneyText>
+              <MoneyText className="font-display text-on-surface" maxFontSize={28}>
+                {formatCents(totals.net)}
+              </MoneyText>
             </View>
-            <View className="flex-row items-center gap-1 rounded-full bg-secondary-container px-2 py-1">
+            <View className="max-w-[42%] shrink flex-row items-center gap-1 rounded-full bg-secondary-container px-2 py-1">
               <MaterialIcons
                 name={ratio !== null && ratio < 0 ? 'trending-down' : 'trending-up'}
                 size={14}
                 color={colors.onSecondaryContainer}
               />
-              <Text className="font-title text-label-sm text-on-secondary-container">
+              <Text className="shrink font-title text-label-sm text-on-secondary-container" numberOfLines={2}>
                 {ratio === null ? 'Sem base no mês anterior' : ratio < 0 ? `Queda de ${formatRatio(ratio)}` : `Alta de ${formatRatio(ratio)}`}
               </Text>
             </View>
@@ -101,8 +92,10 @@ export default function PainelScreen() {
                 <MaterialIcons name="arrow-upward" size={16} color={colors.primary} />
                 <Text className="font-title text-label-sm text-primary">Ganhos</Text>
               </View>
-              <MoneyText className="font-display-semibold text-headline-sm text-on-surface">{formatCents(totals.gains)}</MoneyText>
-              <Text className="font-body text-body-sm text-on-surface-variant">
+              <MoneyText className="font-display-semibold text-on-surface" maxFontSize={17}>
+                {formatCents(totals.gains)}
+              </MoneyText>
+              <Text className="font-body text-body-sm text-on-surface-variant" numberOfLines={2}>
                 Fixo {formatCents(totals.gainsFixed)} • Var {formatCents(totals.gainsVariable)}
               </Text>
             </View>
@@ -111,10 +104,17 @@ export default function PainelScreen() {
                 <MaterialIcons name="arrow-downward" size={16} color={colors.error} />
                 <Text className="font-title text-label-sm text-error">Perdas</Text>
               </View>
-              <MoneyText className="font-display-semibold text-headline-sm text-on-surface">{formatCents(totals.losses)}</MoneyText>
-              <Text className="font-body text-body-sm text-on-surface-variant">
+              <MoneyText className="font-display-semibold text-on-surface" maxFontSize={17}>
+                {formatCents(totals.losses)}
+              </MoneyText>
+              <Text className="font-body text-body-sm text-on-surface-variant" numberOfLines={2}>
                 Fixo {formatCents(totals.lossesFixed)} • Var {formatCents(totals.lossesVariable)}
               </Text>
+              {current.appliedTaxCents > 0 ? (
+                <Text className="font-body text-body-sm text-on-surface-variant" numberOfLines={2}>
+                  Imposto estimado {formatCents(current.appliedTaxCents)}
+                </Text>
+              ) : null}
             </View>
           </View>
         </Card>
@@ -122,7 +122,9 @@ export default function PainelScreen() {
 
       <View className="gap-3">
         <View className="flex-row items-center justify-between">
-          <Text className="font-display-semibold text-headline-sm text-on-surface">Ganhos vs Perdas por mês</Text>
+          <Text className="min-w-0 flex-1 font-display-semibold text-headline-sm text-on-surface" numberOfLines={1}>
+            Ganhos vs Perdas por mês
+          </Text>
           <Text className="font-title text-label-sm text-on-surface-variant">Últimos 6 meses</Text>
         </View>
         <Card>
@@ -137,7 +139,7 @@ export default function PainelScreen() {
                 <Text className="font-title text-label-sm text-on-surface-variant">Perdas</Text>
               </View>
             </View>
-            <MoneyText className="font-mono text-mono-md text-primary">
+            <MoneyText mode="end" className="font-mono text-primary" maxFontSize={13}>
               {`${chartMonthLabel(selected.month)}: ${formatCents(selected.net)}`}
             </MoneyText>
           </View>
@@ -173,7 +175,7 @@ export default function PainelScreen() {
           ) : (
             <Text className="font-body text-body-md text-on-surface-variant">Sem movimento nos últimos 6 meses.</Text>
           )}
-          <Text className="font-body text-body-sm text-on-surface-variant">
+          <Text className="font-body text-body-sm text-on-surface-variant" numberOfLines={2}>
             {`${monthLabel(selected.month)}${selected.partial ? ' (parcial)' : ''}: Ganhos ${formatCents(selected.gains)} • Perdas ${formatCents(selected.losses)}`}
           </Text>
         </Card>
@@ -194,8 +196,10 @@ export default function PainelScreen() {
             label="Perdas"
             total={totals.losses}
             fixedShare={lossFixedShare}
+            taxShare={share(totals.taxCents, totals.losses)}
             fixedClass="bg-error"
             variableClass="bg-error-container"
+            taxClass="bg-warning"
             amountClass="text-error"
           />
         </Card>
@@ -235,7 +239,9 @@ export default function PainelScreen() {
               </Text>
             </View>
           </View>
-          <MoneyText className="font-title text-title-md text-warning">{formatCents(tax.totalCents)}</MoneyText>
+          <MoneyText mode="end" className="font-title text-warning" maxFontSize={15}>
+            {formatCents(tax.totalCents)}
+          </MoneyText>
         </Pressable>
       </View>
     </ScrollView>
@@ -246,32 +252,44 @@ function Composition({
   label,
   total,
   fixedShare,
+  taxShare = 0,
   fixedClass,
   variableClass,
+  taxClass,
   amountClass,
 }: {
   label: string;
   total: number;
   fixedShare: number;
+  taxShare?: number;
   fixedClass: string;
   variableClass: string;
+  taxClass?: string;
   amountClass: string;
 }) {
   const fixedPercent = Math.round(fixedShare * 100);
-  const variablePercent = total > 0 ? 100 - fixedPercent : 0;
+  const taxPercent = Math.round(taxShare * 100);
+  const variablePercent = total > 0 ? Math.max(0, 100 - fixedPercent - taxPercent) : 0;
+  const caption =
+    total > 0
+      ? `${label} (${fixedPercent}% fixo / ${variablePercent}% variável${taxPercent > 0 ? ` / ${taxPercent}% imposto` : ''})`
+      : `${label} (sem movimento)`;
   return (
     <View className="gap-1">
       <View className="flex-row items-center justify-between gap-2">
-        <Text className="flex-1 font-title text-label-md text-on-surface">
-          {total > 0 ? `${label} (${fixedPercent}% fixo / ${variablePercent}% variável)` : `${label} (sem movimento)`}
+        <Text className="min-w-0 flex-1 font-title text-label-md text-on-surface" numberOfLines={2}>
+          {caption}
         </Text>
-        <MoneyText className={`font-mono text-mono-md ${amountClass}`}>{formatCents(total)}</MoneyText>
+        <MoneyText mode="end" className={`font-mono ${amountClass}`} maxFontSize={13}>
+          {formatCents(total)}
+        </MoneyText>
       </View>
       <View className="h-2.5 flex-row overflow-hidden rounded-full bg-surface-high">
         {total > 0 ? (
           <>
             <View className={`h-full ${fixedClass}`} style={{ width: `${fixedPercent}%` }} />
             <View className={`h-full ${variableClass}`} style={{ width: `${variablePercent}%` }} />
+            {taxPercent > 0 && taxClass ? <View className={`h-full ${taxClass}`} style={{ width: `${taxPercent}%` }} /> : null}
           </>
         ) : null}
       </View>

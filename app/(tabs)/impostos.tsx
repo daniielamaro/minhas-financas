@@ -169,8 +169,12 @@ export default function ImpostosScreen() {
           </View>
         </View>
         <View className="flex-row items-end justify-between gap-3">
-          <MoneyText className="font-display text-display-mobile text-on-surface">{formatCents(estimate.totalCents)}</MoneyText>
-          <Text className="font-mono text-mono-md text-primary">
+          <View className="min-w-0 flex-1">
+            <MoneyText className="font-display text-on-surface" maxFontSize={28}>
+              {formatCents(estimate.totalCents)}
+            </MoneyText>
+          </View>
+          <Text className="shrink font-mono text-mono-md text-primary" numberOfLines={1}>
             {formatPercentRate(estimate.effectiveRate, 2)}% efetivo
           </Text>
         </View>
@@ -178,7 +182,9 @@ export default function ImpostosScreen() {
           {estimate.lines.map((line) => (
             <View key={line.label} className="flex-row items-center justify-between gap-3">
               <Text className="flex-1 font-body text-body-sm text-on-surface-variant">{line.label}</Text>
-              <MoneyText className="font-mono text-mono-md text-on-surface">{formatCents(line.cents)}</MoneyText>
+              <MoneyText mode="end" className="font-mono text-on-surface" maxFontSize={13}>
+                {formatCents(line.cents)}
+              </MoneyText>
             </View>
           ))}
         </View>
