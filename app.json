@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Minhas Finanças",
+    "name": "Minhas Financas",
     "slug": "minhasfinancas",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,7 +8,12 @@
     "scheme": "minhasfinancas",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "br.com.danielamaro.minhasfinancas",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDisplayName": "Minhas Finanças"
+      }
     },
     "android": {
       "package": "br.com.danielamaro.minhasfinancas",
@@ -53,7 +58,8 @@
             "./assets/sounds/alarme.wav"
           ]
         }
-      ]
+      ],
+      "./plugins/withAndroidDisplayName"
     ],
     "experiments": {
       "typedRoutes": true
